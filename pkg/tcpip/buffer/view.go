@@ -15,6 +15,11 @@
 // Package buffer provides the implementation of a buffer view.
 package buffer
 
+import (
+	"bytes"
+	"io"
+)
+
 // View is a slice of a buffer, with convenience methods.
 type View []byte
 
@@ -43,6 +48,11 @@ func (v *View) CapLength(length int) {
 	// prevent that to avoid potential data leak if we have uninitialized
 	// data in excluded region.
 	*v = (*v)[:length:length]
+}
+
+// Reader returns an io.Reader for v.
+func (v *View) Reader() io.Reader {
+	return bytes.NewReader(*v)
 }
 
 // ToVectorisedView returns a VectorisedView containing the receiver.
@@ -161,4 +171,13 @@ func (vv *VectorisedView) Append(vv2 VectorisedView) {
 func (vv *VectorisedView) AppendView(v View) {
 	vv.views = append(vv.views, v)
 	vv.size += len(v)
+}
+
+// Reader returns an io.Reader for vv.
+func (vv *VectorisedView) Reader() io.Reader {
+	readers := make([]io.Reader, 0, len(vv.views))
+	for _, v := range vv.views {
+		readers = append(readers, v.Reader())
+	}
+	return io.MultiReader(readers...)
 }
