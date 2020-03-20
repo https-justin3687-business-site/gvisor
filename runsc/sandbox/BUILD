@@ -22,6 +22,7 @@ go_library(
         "//pkg/tcpip/header",
         "//pkg/tcpip/stack",
         "//pkg/urpc",
+        "//runsc/argument",
         "//runsc/boot",
         "//runsc/boot/platforms",
         "//runsc/cgroup",

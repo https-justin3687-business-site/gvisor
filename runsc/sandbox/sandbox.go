@@ -35,6 +35,7 @@ import (
 	"gvisor.dev/gvisor/pkg/sentry/platform"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/urpc"
+	"gvisor.dev/gvisor/runsc/argument"
 	"gvisor.dev/gvisor/runsc/boot"
 	"gvisor.dev/gvisor/runsc/boot/platforms"
 	"gvisor.dev/gvisor/runsc/cgroup"
@@ -508,6 +509,19 @@ func (s *Sandbox) createSandboxProcess(conf *boot.Config, args *Args, startSyncF
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
+		}
+	}
+
+	for _, registeredArg := range argument.RegisteredArgs {
+		extraArgs, extraFiles, err := registeredArg.OnCreateSandboxProcess(s.ID, &nextFD)
+		if err != nil {
+			return fmt.Errorf("adding files from extra args: %v", err)
+		}
+		for _, arg := range extraArgs {
+			cmd.Args = append(cmd.Args, arg)
+		}
+		for _, file := range extraFiles {
+			cmd.ExtraFiles = append(cmd.ExtraFiles, file)
 		}
 	}
 
